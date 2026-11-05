@@ -1,0 +1,51 @@
+A (KDB entry):    tests/structures/h2o.vasp  — 3 atoms  H2O
+B (reactant):     tests/structures/h2o_copy.vasp  — 3 atoms  H2O
+Parameters: dc = 0.3 Å (config.py:6), nf = 0.2 (config.py:5), USE_GRAPH = True, USE_GROUP_SIMILARITY = False
+
+Step 1: B has at least as many atoms of each element as A
+  [KDB: kdbquery.py:169-181, query_kdb_entry]
+  A: H:2, O:1
+  B: H:2, O:1
+  PASS — every element in A is present in B in equal or greater number
+
+Step 2: build bond graphs (nodes = atoms labelled by element)
+  [KDB: graph.py:21-56 graph_reactant, graph.py:81-116 graph_kdbentry, called at kdbquery.py:528 and kdbquery.py:196]
+  cutoff = r_cov * 0  [graph.py:39 and graph.py:103, mult=0 in current KDB] -> no pair can be closer than 0 Å, so no bonds are made
+  G2 (A): 3 nodes, 0 bonds, 3 connected pieces
+  G1 (B): 3 nodes, 0 bonds
+  PASS — graphs built (this step has no pass/fail condition in KDB)
+
+Step 3: precompute pair distances
+  [KDB: isomorphism.py:106-113; common.py:56 atomAtomDistance, common.py:133 atomAtomPermDistance, fortran/common.f90:17-56]
+  A: plain Cartesian distances, no periodic wrapping
+  B: distances to 8 nearby periodic images of each partner atom
+  A distances: min 0.994 Å, max 1.572 Å
+  PASS — distance tables built (no pass/fail condition)
+
+Step 4: choose the order A's atoms are matched in (speed only)
+  [KDB: isomorphism.py:124-235, nodeOrder_plusplus]
+  order: A0(O) A1(H) A2(H)
+  mobile atoms in A: all 3;  frozen atoms in B: none
+  PASS — order fixed (no pass/fail condition)
+
+Step 5: assign every atom of A to a distinct atom of B (VF2 subgraph search)
+  [KDB: kdbquery.py:195-202; isomorphism.py:347-375 match, 412-588 feasibility]
+  each assignment must pass, in order: element, frozen, degree, distance (|d_A - d_B| < 2*dc = 0.60 Å for every already-assigned pair), bonds
+  rejected candidate assignments by check:
+             2  same element (isomorphism.py:454-455)
+  complete mappings found: 2
+  PASS — 2 mapping(s) satisfy every check
+
+Step 6: rotate A onto each mapping; every atom must land within dc
+  [KDB: kdbquery.py:305-363; SVD fit at 343-350, score at 355, cut at 359]
+  coplanar test: smallest singular value / N = 0.0000 < dc² = 0.09 -> coplanar: mirror image also tried
+  pass if score = max over atoms of |rotated A - B|² ≤ dc² = 0.09 Å² (i.e. every atom within 0.3 Å)
+  mapping 1: A_i->B_i for all 3 atoms
+      det(R) = +1, worst atom A0 off by 0.000 Å (score 0.0000) -> within 0.3 Å
+      mirror try, det(R) = -1, worst atom A0 off by 0.000 Å (score 0.0000) -> within 0.3 Å
+  mapping 2: A1->B2 A2->B1; other 1 atoms A_i->B_i
+      det(R) = -1, worst atom A0 off by 0.000 Å (score 0.0000) -> within 0.3 Å
+      mirror try, det(R) = +1, worst atom A0 off by 0.000 Å (score 0.0000) -> within 0.3 Å
+  PASS — best mapping puts every atom within 0.000 Å
+
+VERDICT: MATCH — all 3 atoms of A map onto B and line up within 0.000 Å ≤ dc = 0.3 Å

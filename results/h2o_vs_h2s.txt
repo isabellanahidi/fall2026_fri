@@ -1,0 +1,11 @@
+A (KDB entry):    tests/structures/h2o.vasp  — 3 atoms  H2O
+B (reactant):     tests/structures/h2s.vasp  — 3 atoms  H2S
+Parameters: dc = 0.3 Å (config.py:6), nf = 0.2 (config.py:5), USE_GRAPH = True, USE_GROUP_SIMILARITY = False
+
+Step 1: B has at least as many atoms of each element as A
+  [KDB: kdbquery.py:169-181, query_kdb_entry]
+  A: H:2, O:1
+  B: H:2, S:1
+  FAIL — B has no O atoms (A has 1)
+
+VERDICT: NO MATCH — failed at Step 1: B has no O atoms (A has 1)

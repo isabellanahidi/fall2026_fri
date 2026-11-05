@@ -68,7 +68,7 @@ def bond_graph(atoms, fudge=0.2):
 
 
 # ---------------------------------------------------- region of interest ----
-def find_adsorbate(atoms, gap=0.5):
+def find_adsorbate(atoms, gap=0.5): # this is like hard coding as it is not for a general algorithm
     """Guess the adsorbate on a slab: atoms sitting more than `gap` Å above
     the top layer of the slab's most common element. Falls back to the
     topmost layer if nothing qualifies (e.g. a clean slab)."""
